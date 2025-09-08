@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 
 /**
  * Hours Calculator – Hotel Submission
@@ -87,18 +87,23 @@ export default function HoursCalculator() {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
   }))
 
-  const [days, setDays] = useState(() => {
-    // try to load from localStorage
-    const saved = localStorage.getItem("hours_calc_v1")
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch {}
-    }
-    return defaultWeek(new Date().toISOString().slice(0, 10))
-  })
+  const [days, setDays] = useState(() => defaultWeek(new Date().toISOString().slice(0, 10)))
 
   const [consent, setConsent] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("hours_calc_v1")
+        if (saved) {
+          const parsedData = JSON.parse(saved)
+          setDays(parsedData)
+        }
+      } catch (error) {
+        console.error("Failed to load saved data:", error)
+      }
+    }
+  }, [])
 
   const totals = useMemo(() => {
     let grandMin = 0
@@ -126,9 +131,13 @@ export default function HoursCalculator() {
   }
 
   function persist(d) {
-    try {
-      localStorage.setItem("hours_calc_v1", JSON.stringify(d))
-    } catch {}
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("hours_calc_v1", JSON.stringify(d))
+      } catch (error) {
+        console.error("Failed to save data:", error)
+      }
+    }
   }
 
   function clearAll() {
