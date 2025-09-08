@@ -3,8 +3,15 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Calculadora de Horas - Hotéis",
-  description: "Sistema para cálculo e envio de horas trabalhadas para hotéis",
+  title: "Hours Calculator - Space Coast Services",
+  description: "Professional hours tracking and submission system for hotel employees - Space Coast Services",
+  keywords: "hours calculator, time tracking, hotel employees, Space Coast Services, work hours",
+  authors: [{ name: "Space Coast Services" }],
+  openGraph: {
+    title: "Hours Calculator - Space Coast Services",
+    description: "Professional hours tracking and submission system for hotel employees",
+    type: "website",
+  },
     generator: 'v0.app'
 }
 
@@ -14,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="en">
       <body className="antialiased">{children}</body>
     </html>
   )
