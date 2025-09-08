@@ -308,7 +308,10 @@ export default function HoursCalculator() {
     <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
       <div className="max-w-6xl mx-auto">
         <header className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold">Hours Calculator — Hotel Submission</h1>
+          <div className="flex items-center gap-4">
+            <img src="/logo.png" alt="Space Coast Services" className="h-12 w-auto" />
+            <h1 className="text-2xl md:text-3xl font-bold">Hours Calculator — Hotel Submission</h1>
+          </div>
           <div className="flex gap-2 print:hidden">
             <button onClick={downloadCSV} className="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 shadow">
               Download CSV
