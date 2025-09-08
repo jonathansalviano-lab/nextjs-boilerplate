@@ -13,6 +13,7 @@ import { useMemo, useState, useEffect } from "react"
  * - Field validation and error highlights
  * - Export CSV, Copy summary (email), Print/Save PDF
  * - Save draft in browser (LocalStorage)
+ * - AM/PM time format support
  *
  * How to use:
  * 1) Fill header (Hotel, Manager, Employee, Week/Date).
@@ -25,12 +26,30 @@ import { useMemo, useState, useEffect } from "react"
 const pad = (n) => String(n).padStart(2, "0")
 
 function parseTimeToMinutes(t) {
-  // Accepts HH:MM or H:MM; returns minutes from 00:00, or null if invalid
   if (!t || typeof t !== "string") return null
-  const m = t.trim().match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
-  if (!m) return null
-  const hh = Number(m[1])
-  const mm = Number(m[2])
+
+  const timeStr = t.trim().toUpperCase()
+
+  // Check for AM/PM format first
+  const ampmMatch = timeStr.match(/^(\d{1,2}):([0-5]\d)\s*(AM|PM)$/i)
+  if (ampmMatch) {
+    let hours = Number.parseInt(ampmMatch[1])
+    const minutes = Number.parseInt(ampmMatch[2])
+    const period = ampmMatch[3].toUpperCase()
+
+    if (hours < 1 || hours > 12) return null
+    if (period === "AM" && hours === 12) hours = 0
+    if (period === "PM" && hours !== 12) hours += 12
+
+    return hours * 60 + minutes
+  }
+
+  // Fall back to 24-hour format
+  const match24 = timeStr.match(/^([01]?\d|2[0-3]):([0-5]\d)$/)
+  if (!match24) return null
+
+  const hh = Number(match24[1])
+  const mm = Number(match24[2])
   return hh * 60 + mm
 }
 
@@ -40,6 +59,18 @@ function minutesToHHMM(min) {
   const h = Math.floor(abs / 60)
   const m = abs % 60
   return `${sign}${pad(h)}:${pad(m)}`
+}
+
+function minutesToAMPM(min) {
+  const abs = Math.abs(min)
+  let hours = Math.floor(abs / 60) % 24
+  const minutes = abs % 60
+  const period = hours >= 12 ? "PM" : "AM"
+
+  if (hours === 0) hours = 12
+  else if (hours > 12) hours -= 12
+
+  return `${hours}:${pad(minutes)} ${period}`
 }
 
 function minutesToDecimalHours(min) {
@@ -82,9 +113,7 @@ export default function HoursCalculator() {
     hotel: "",
     manager: "",
     employee: "",
-    employeeId: "",
     weekStart: new Date().toISOString().slice(0, 10),
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
   }))
 
   const [days, setDays] = useState(() => defaultWeek(new Date().toISOString().slice(0, 10)))
@@ -192,8 +221,6 @@ export default function HoursCalculator() {
       "Hotel",
       "Manager",
       "Employee",
-      "ID",
-      "TimeZone",
       "Date",
       "Shift#",
       "Start",
@@ -213,8 +240,6 @@ export default function HoursCalculator() {
           meta.hotel,
           meta.manager,
           meta.employee,
-          meta.employeeId,
-          meta.timezone,
           day.date,
           si + 1,
           s.start,
@@ -226,26 +251,12 @@ export default function HoursCalculator() {
         ])
       })
       if (day.shifts.length === 0) {
-        rows.push([
-          meta.hotel,
-          meta.manager,
-          meta.employee,
-          meta.employeeId,
-          meta.timezone,
-          day.date,
-          "-",
-          "",
-          "",
-          0,
-          "00:00",
-          0,
-          day.notes || "",
-        ])
+        rows.push([meta.hotel, meta.manager, meta.employee, day.date, "-", "", "", 0, "00:00", 0, day.notes || ""])
       }
     })
     // Totals
     rows.push([])
-    rows.push(["WEEKLY TOTAL", "", "", "", "", "", "", "", "", minutesToHHMM(totals.grandMin), totals.grandDec, ""])
+    rows.push(["WEEKLY TOTAL", "", "", "", "", "", "", minutesToHHMM(totals.grandMin), totals.grandDec, ""])
     return [header, ...rows]
       .map((r) => r.map((v) => (v === undefined || v === null ? "" : String(v))).join(","))
       .join("\n")
@@ -267,9 +278,8 @@ export default function HoursCalculator() {
     const lines = []
     lines.push(`Hotel: ${meta.hotel}`)
     lines.push(`Manager: ${meta.manager}`)
-    lines.push(`Employee: ${meta.employee} (${meta.employeeId})`)
+    lines.push(`Employee: ${meta.employee}`)
     lines.push(`Week starting: ${meta.weekStart}`)
-    lines.push(`TimeZone: ${meta.timezone}`)
     lines.push("")
     days.forEach((d, i) => {
       const dayTotal = d.shifts.reduce((acc, s) => acc + calcShiftMinutes(s.start, s.end, s.breakMin).minutes, 0)
@@ -341,19 +351,7 @@ export default function HoursCalculator() {
             onChange={(v) => onMetaChange("employee", v)}
             placeholder="Employee name"
           />
-          <Input
-            label="ID/Employee#"
-            value={meta.employeeId}
-            onChange={(v) => onMetaChange("employeeId", v)}
-            placeholder="Optional"
-          />
           <Input label="Week start" type="date" value={meta.weekStart} onChange={(v) => onMetaChange("weekStart", v)} />
-          <Input
-            label="Time Zone"
-            value={meta.timezone}
-            onChange={(v) => onMetaChange("timezone", v)}
-            placeholder="America/New_York"
-          />
           <div className="lg:col-span-3 flex items-start gap-2 mt-2">
             <input
               id="consent"
@@ -502,8 +500,8 @@ export default function HoursCalculator() {
               </div>
             </div>
             <div className="text-xs text-slate-500 max-w-xl">
-              Tip: hours that cross midnight are supported. Ex.: Start 22:00, End 06:00, Break 30 → the system
-              calculates 7:30 (7.5h).
+              Tip: hours that cross midnight are supported. Use either 24-hour format (22:00) or 12-hour format (10:00
+              PM). Ex.: Start 10:00 PM, End 6:00 AM, Break 30 → the system calculates 7:30 (7.5h).
             </div>
           </div>
         </footer>
@@ -544,12 +542,12 @@ function TimeInput({ value, onChange }) {
   return (
     <input
       type="text"
-      inputMode="numeric"
+      inputMode="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="HH:MM"
-      className="w-28 rounded-lg border p-2"
-      title="Formato 24h: HH:MM"
+      placeholder="9:00 AM"
+      className="w-32 rounded-lg border p-2"
+      title="Supports both formats: 9:00 AM or 21:00"
     />
   )
 }
