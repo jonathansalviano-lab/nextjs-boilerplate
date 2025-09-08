@@ -307,30 +307,44 @@ export default function HoursCalculator() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
       <div className="max-w-6xl mx-auto">
-        <header className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Space Coast Services" className="h-12 w-auto" />
-            <h1 className="text-2xl md:text-3xl font-bold">Hours Calculator — Hotel Submission</h1>
-          </div>
-          <div className="flex gap-2 print:hidden">
-            <button onClick={downloadCSV} className="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 shadow">
-              Download CSV
-            </button>
-            <button
-              onClick={copyEmailSummary}
-              className="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 shadow"
-            >
-              Copy summary
-            </button>
-            <button onClick={printPDF} className="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50 shadow">
-              Print / PDF
-            </button>
-            <button
-              onClick={clearAll}
-              className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 shadow"
-            >
-              Clear
-            </button>
+        <header className="mb-8 bg-white rounded-2xl shadow-sm p-6 print:shadow-none print:border">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Brand section */}
+            <div className="flex items-center gap-4">
+              <img src="/logo.png" alt="Space Coast Services" className="h-14 w-auto flex-shrink-0" />
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">Hours Calculator</h1>
+                <p className="text-sm text-slate-600 font-medium">Hotel Submission</p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap gap-2 print:hidden">
+              <button
+                onClick={downloadCSV}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm text-sm font-medium transition-colors"
+              >
+                📊 Download CSV
+              </button>
+              <button
+                onClick={copyEmailSummary}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm text-sm font-medium transition-colors"
+              >
+                📋 Copy Summary
+              </button>
+              <button
+                onClick={printPDF}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm text-sm font-medium transition-colors"
+              >
+                🖨️ Print / PDF
+              </button>
+              <button
+                onClick={clearAll}
+                className="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 shadow-sm text-sm font-medium transition-colors"
+              >
+                🗑️ Clear
+              </button>
+            </div>
           </div>
         </header>
 
